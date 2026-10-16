@@ -1,14 +1,7 @@
-# The documentation site of GCVMessagePassingRules. Build it with `make docs-gcv` from the repository
-# root, which builds the sites it links to first, or `julia --project=docs docs/make.jl` here.
+# The documentation site of GCVMessagePassingRules. Build it with `make docs`, or
+# `julia --project=docs docs/make.jl`.
 using Documenter, DocumenterInterLinks, DocInventories
 using GCVMessagePassingRules
-
-# Another package's site, for `@extref` links: its planned address, and the inventory of its local
-# build, which must exist, so sites build in dependency order (`make docs-all`).
-sibling(name) = (
-    "https://reactivebayes.github.io/$(name).jl/dev/",
-    joinpath(@__DIR__, "..", "..", name, "docs", "build", "objects.inv"),
-)
 
 # A registered package's site, by its published inventory. A first request to GitHub Pages can take
 # seconds, longer than DocInventories' default timeout of one second, so it waits longer.
@@ -20,7 +13,7 @@ registered(name) = Inventory(
 links = InterLinks(
     "MessagePassingRulesApproximations" => registered("MessagePassingRulesApproximations"),
     "MessagePassingRulesBase" => registered("MessagePassingRulesBase"),
-    "StandardMessagePassingRules" => sibling("StandardMessagePassingRules"),
+    "StandardMessagePassingRules" => registered("StandardMessagePassingRules"),
 )
 
 DocMeta.setdocmeta!(GCVMessagePassingRules, :DocTestSetup, :(using GCVMessagePassingRules); recursive = true)
@@ -37,4 +30,12 @@ makedocs(
         prettyurls = get(ENV, "CI", nothing) == "true",
         example_size_threshold = 400 * 1024, size_threshold_warn = 400 * 1024, size_threshold = 400 * 1024,
     ),
+)
+
+deploydocs(
+    repo = "github.com/ReactiveBayes/GCVMessagePassingRules.jl.git",
+    devbranch = "main",
+    # A preview for every pull request but CompatHelper's, whose documentation nobody reviews;
+    # `DocPreviewCleanup.yml` deletes it when the pull request closes.
+    push_preview = !startswith(get(ENV, "GITHUB_HEAD_REF", ""), "compathelper/"),
 )
